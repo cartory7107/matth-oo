@@ -1,0 +1,29 @@
+name: Daily Math Puzzle Automation
+
+on:
+  schedule:
+    # প্রতিদিন বাংলাদেশ সময় সকাল ৯টায় (UTC 3:00 AM)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # নিজের ইচ্ছেমতো টেস্ট চালানোর জন্য
+
+jobs:
+  post-puzzle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: কোড চেকআউট করা
+        uses: actions/checkout@v4
+
+      - name: পাইথন সেটআপ করা
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: প্যাকেজ ইনস্টল করা
+        run: pip install -r requirements.txt
+
+      - name: স্ক্রিপ্ট রান করা
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
