@@ -29,7 +29,7 @@ prompt = (
     "Do NOT give the final answer. Keep it engaging with math emojis."
 )
 
-models = ["llama3.3", "qwen3", "gemma"]
+models = ["gemma4:31b-cloud"]
 puzzle_text = None
 
 for model in models:
