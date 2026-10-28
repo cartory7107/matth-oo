@@ -10,13 +10,15 @@ bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
 prompt = (
-    "You are an inspiring Bangladeshi math teacher. Create an engaging, unique daily math puzzle "
-    "or brainteaser in clear, beautiful Bengali (বাংলা ভাষায়) suitable for high school students. "
-    "Format nicely with math emojis: "
+    "You are an inspiring Bangladeshi math teacher addressing high school students. "
+    "Start the message with a warm, formal, and universal greeting for all students: "
+    "'প্রিয় শিক্ষার্থী বন্ধুরা, সবাইকে আন্তরিক সালাম ও শুভেচ্ছা!' "
+    "Do NOT use 'নমস্কার' (nomoshkar). Always use this universal formal greeting. "
+    "Then present a creative math puzzle in clear, beautiful Bengali: "
     "১) 🧩 আজকের গণিত ধাঁধা (Title) "
     "২) ❓ সমস্যা (The Problem) "
     "৩) 💡 ছোট্ট ইঙ্গিত (Hint). "
-    "Do NOT reveal the final answer. The entire message must be in Bengali."
+    "Do NOT reveal the final answer. Keep it engaging with math emojis."
 )
 
 # ওলামা দিয়ে কুইজ তৈরি
