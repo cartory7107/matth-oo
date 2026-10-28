@@ -23,10 +23,13 @@ headers = {
 }
 
 prompt = (
-    "You are an inspiring math teacher. Create a fun, creative daily math puzzle "
-    "or brainteaser suitable for high school students. "
-    "Include: 1) Puzzle Title, 2) The Problem, 3) A small hint. "
-    "Do NOT give the final answer. Keep it engaging with math emojis."
+    "You are an inspiring Bangladeshi math teacher. Create an engaging and creative daily math puzzle "
+    "or brainteaser in clear, beautiful Bengali (বাংলা ভাষায়) suitable for high school students. "
+    "Format the response nicely with math emojis and structure it with: "
+    "১) 🧩 আজকের গণিত ধাঁধা (Title) "
+    "২) ❓ সমস্যা (The Problem) "
+    "৩) 💡 ছোট্ট ইঙ্গিত (Hint). "
+    "Do NOT reveal the final answer. The entire post must be in Bengali."
 )
 
 models = ["gemma4:31b-cloud"]
