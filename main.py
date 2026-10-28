@@ -1,7 +1,7 @@
 import os
+import time
 import requests
 
-# পরিবেশ থেকে ভ্যারিয়েবল গ্রহণ
 ollama_key = (
     os.environ.get("ollama")
     or os.environ.get("OLLAMA")
@@ -10,62 +10,53 @@ ollama_key = (
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
-# এপিআই কী চেক করা
-print(f"Ollama key loaded: {bool(ollama_key)}")
-if not ollama_key:
-    raise ValueError(
-        "API Key পাওয়া যায়নি! দয়া করে .github/workflows/daily.yml ফাইলের env অংশে ollama যোগ করুন।"
-    )
-
 headers = {
     "Authorization": f"Bearer {ollama_key.strip()}",
     "Content-Type": "application/json",
 }
 
 prompt = (
-    "You are an inspiring Bangladeshi math teacher. Create an engaging and creative daily math puzzle "
+    "You are an inspiring Bangladeshi math teacher. Create an engaging, unique, and creative math puzzle "
     "or brainteaser in clear, beautiful Bengali (বাংলা ভাষায়) suitable for high school students. "
-    "Format the response nicely with math emojis and structure it with: "
+    "Format nicely with math emojis: "
     "১) 🧩 আজকের গণিত ধাঁধা (Title) "
     "২) ❓ সমস্যা (The Problem) "
     "৩) 💡 ছোট্ট ইঙ্গিত (Hint). "
-    "Do NOT reveal the final answer. The entire post must be in Bengali."
+    "Do NOT reveal the final answer. The entire message must be in Bengali."
 )
 
-models = ["gemma4:31b-cloud"]
-puzzle_text = None
+telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-for model in models:
+# ২০ মিনিটের লাইভ এক্সপেরিমেন্ট (প্রতি ১ মিনিটে ১টি, মোট ২০টি)
+TOTAL_ROUNDS = 20
+
+for round_num in range(1, TOTAL_ROUNDS + 1):
+    print(f"--- Round {round_num}/{TOTAL_ROUNDS} ---")
     try:
-        print(f"Trying Ollama Cloud model: {model}...")
         res = requests.post(
             "https://ollama.com/api/chat",
             headers=headers,
             json={
-                "model": model,
+                "model": "gemma4:31b-cloud",
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
             },
             timeout=60,
         )
         if res.status_code == 200:
-            data = res.json()
-            puzzle_text = data.get("message", {}).get("content")
+            puzzle_text = res.json().get("message", {}).get("content")
             if puzzle_text:
-                print(f"Success with {model}!")
-                break
+                full_message = f"📢 ধাঁধা #{round_num} (লাইভ টেস্ট):\n\n{puzzle_text}"
+                requests.post(telegram_url, json={"chat_id": chat_id, "text": full_message})
+                print(f"Posted puzzle #{round_num} to Telegram!")
         else:
-            print(f"Ollama response ({res.status_code}): {res.text}")
+            print(f"Ollama error: {res.text}")
     except Exception as e:
-        print(f"Error with {model}: {e}")
+        print(f"Error in round {round_num}: {e}")
 
-if not puzzle_text:
-    raise RuntimeError("Ollama Cloud থেকে ধাঁধা তৈরি করা যায়নি।")
+    # শেষ রাউন্ড ছাড়া বাকিগুলোতে ৬০ সেকেন্ড বিরতি
+    if round_num < TOTAL_ROUNDS:
+        print("Waiting 60 seconds...")
+        time.sleep(60)
 
-# টেলিগ্রাম চ্যানেলে পাঠানো
-telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-tel_res = requests.post(telegram_url, json={"chat_id": chat_id, "text": puzzle_text})
-print(f"Telegram status: {tel_res.status_code}")
-if tel_res.status_code != 200:
-    print(f"Telegram error details: {tel_res.text}")
-tel_res.raise_for_status()
+print("২০ মিনিটের টেস্ট সফলভাবে সম্পন্ন হয়েছে!")
