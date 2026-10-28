@@ -1,13 +1,15 @@
 import os
-import time
 import requests
-from google import genai
 
-gemini_key = os.environ.get("GEMINI_API_KEY")
+ollama_key = os.environ.get("ollama") or os.environ.get("OLLAMA_API_KEY")
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
-client = genai.Client(api_key=gemini_key)
+headers = {
+    "Authorization": f"Bearer {ollama_key}",
+    "Content-Type": "application/json",
+}
+
 prompt = (
     "You are an inspiring math teacher. Create a fun, creative daily math puzzle "
     "or brainteaser suitable for high school students. "
@@ -15,37 +17,40 @@ prompt = (
     "Do NOT give the final answer. Keep it engaging with math emojis."
 )
 
-# বর্তমান সক্রিয় দুটি মডেল
-models_to_try = ["gemini-3.8-flash", "gemini-3.8-pro"]
+models = ["llama3.3", "qwen3", "gemma"]
 puzzle_text = None
 
-for model_name in models_to_try:
-    print(f"Trying model: {model_name}...")
-    for attempt in range(1, 4):
-        try:
-            print(f"Attempt {attempt} with {model_name}...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-            )
-            if response and response.text:
-                puzzle_text = response.text
-                print(f"Success with {model_name}!")
+for model in models:
+    try:
+        print(f"Trying Ollama Cloud model: {model}...")
+        res = requests.post(
+            "https://ollama.com/api/chat",
+            headers=headers,
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+            },
+            timeout=60,
+        )
+        if res.status_code == 200:
+            data = res.json()
+            puzzle_text = data.get("message", {}).get("content")
+            if puzzle_text:
+                print(f"Success with {model}!")
                 break
-        except Exception as e:
-            print(f"Error on attempt {attempt}: {e}")
-            if attempt < 3:
-                time.sleep(10)  # সার্ভারের চাপ কমার জন্য ১০ সেকেন্ড অপেক্ষা
-    if puzzle_text:
-        break
+        else:
+            print(f"Ollama response ({res.status_code}): {res.text}")
+    except Exception as e:
+        print(f"Error with {model}: {e}")
 
 if not puzzle_text:
-    raise RuntimeError("সার্ভার ব্যস্ত থাকায় ধাঁধা তৈরি করা যায়নি।")
+    raise RuntimeError("Ollama Cloud থেকে ধাঁধা তৈরি করা যায়নি।")
 
 # টেলিগ্রাম চ্যানেলে পাঠানো
 telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-res = requests.post(telegram_url, json={"chat_id": chat_id, "text": puzzle_text})
-print(f"Telegram status: {res.status_code}")
-if res.status_code != 200:
-    print(f"Telegram error details: {res.text}")
-res.raise_for_status()
+tel_res = requests.post(telegram_url, json={"chat_id": chat_id, "text": puzzle_text})
+print(f"Telegram status: {tel_res.status_code}")
+if tel_res.status_code != 200:
+    print(f"Telegram error: {tel_res.text}")
+tel_res.raise_for_status()
