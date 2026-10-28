@@ -1,12 +1,24 @@
 import os
 import requests
 
-ollama_key = os.environ.get("ollama") or os.environ.get("OLLAMA_API_KEY")
+# পরিবেশ থেকে ভ্যারিয়েবল গ্রহণ
+ollama_key = (
+    os.environ.get("ollama")
+    or os.environ.get("OLLAMA")
+    or os.environ.get("OLLAMA_API_KEY")
+)
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
+# এপিআই কী চেক করা
+print(f"Ollama key loaded: {bool(ollama_key)}")
+if not ollama_key:
+    raise ValueError(
+        "API Key পাওয়া যায়নি! দয়া করে .github/workflows/daily.yml ফাইলের env অংশে ollama যোগ করুন।"
+    )
+
 headers = {
-    "Authorization": f"Bearer {ollama_key}",
+    "Authorization": f"Bearer {ollama_key.strip()}",
     "Content-Type": "application/json",
 }
 
@@ -45,12 +57,12 @@ for model in models:
         print(f"Error with {model}: {e}")
 
 if not puzzle_text:
-    raise RuntimeError("Ollama Cloud থেকে ধাঁধা তৈরি করা যায়নি।")
+    raise RuntimeError("Ollama Cloud থেকে ধাঁধা তৈরি করা যায়নি।")
 
 # টেলিগ্রাম চ্যানেলে পাঠানো
 telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 tel_res = requests.post(telegram_url, json={"chat_id": chat_id, "text": puzzle_text})
 print(f"Telegram status: {tel_res.status_code}")
 if tel_res.status_code != 200:
-    print(f"Telegram error: {tel_res.text}")
+    print(f"Telegram error details: {tel_res.text}")
 tel_res.raise_for_status()
