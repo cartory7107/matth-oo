@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # ম্যানুয়ালি টেস্ট চালানোর বাটন
 
 jobs:
-  post-puzzle:
+  send-puzzle:
     runs-on: ubuntu-latest
     steps:
       - name: কোড ডাউনলোড করা
@@ -24,6 +24,7 @@ jobs:
       - name: স্ক্রিপ্ট রান করা
         env:
           ollama: ${{ secrets.ollama || vars.ollama }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+          WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
         run: python main.py
