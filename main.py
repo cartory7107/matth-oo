@@ -6,9 +6,11 @@ ollama_key = os.environ.get("ollama") or os.environ.get("OLLAMA") or os.environ.
 wa_token = os.environ.get("WHATSAPP_TOKEN")
 wa_phone_id = os.environ.get("WHATSAPP_PHONE_ID")
 wa_to = os.environ.get("WHATSAPP_TO")
+bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
 prompt = (
-    "You are an inspiring Bangladeshi math teacher. Create an engaging, creative daily math puzzle "
+    "You are an inspiring Bangladeshi math teacher. Create an engaging, unique daily math puzzle "
     "or brainteaser in clear, beautiful Bengali (বাংলা ভাষায়) suitable for high school students. "
     "Format nicely with math emojis: "
     "১) 🧩 আজকের গণিত ধাঁধা (Title) "
@@ -17,38 +19,29 @@ prompt = (
     "Do NOT reveal the final answer. The entire message must be in Bengali."
 )
 
-# ওলামা ক্লাউড দিয়ে বাংলায় ধাঁধা তৈরি
-print("Generating math puzzle from Ollama Cloud...")
-ollama_res = requests.post(
+# ওলামা দিয়ে কুইজ তৈরি
+print("Generating 5-hour quiz from Ollama Cloud...")
+res = requests.post(
     "https://ollama.com/api/chat",
     headers={"Authorization": f"Bearer {ollama_key.strip()}", "Content-Type": "application/json"},
-    json={
-        "model": "gemma4:31b-cloud",
-        "messages": [{"role": "user", "content": prompt}],
-        "stream": False,
-    },
+    json={"model": "gemma4:31b-cloud", "messages": [{"role": "user", "content": prompt}], "stream": False},
     timeout=60,
 )
-ollama_res.raise_for_status()
-puzzle_text = ollama_res.json().get("message", {}).get("content")
+res.raise_for_status()
+puzzle_text = res.json().get("message", {}).get("content")
 
-# মেটা ক্লাউড এপিআই দিয়ে হোয়াটসঅ্যাপে পাঠানো
-wa_url = f"https://graph.facebook.com/v21.0/{wa_phone_id}/messages"
-headers_wa = {
-    "Authorization": f"Bearer {wa_token.strip()}",
-    "Content-Type": "application/json",
-}
-payload_wa = {
-    "messaging_product": "whatsapp",
-    "to": wa_to.strip(),
-    "type": "text",
-    "text": {"body": puzzle_text},
-}
+# ১) হোয়াটসঅ্যাপে পাঠানো
+if wa_token and wa_phone_id and wa_to:
+    wa_url = f"https://graph.facebook.com/v21.0/{wa_phone_id}/messages"
+    headers_wa = {"Authorization": f"Bearer {wa_token.strip()}", "Content-Type": "application/json"}
+    payload_wa = {"messaging_product": "whatsapp", "to": wa_to.strip(), "type": "text", "text": {"body": puzzle_text}}
+    wa_res = requests.post(wa_url, headers=headers_wa, json=payload_wa)
+    print(f"WhatsApp status: {wa_res.status_code}")
 
-print(f"Sending puzzle to WhatsApp: {wa_to}...")
-wa_res = requests.post(wa_url, headers=headers_wa, json=payload_wa)
-print(f"WhatsApp status: {wa_res.status_code}")
-if wa_res.status_code != 200:
-    print(f"WhatsApp error response: {wa_res.text}")
-wa_res.raise_for_status()
-print("ধাঁধা সফলভাবে হোয়াটসঅ্যাপে পৌঁছে গেছে!")
+# ২) টেলিগ্রাম চ্যানেলেও পাঠানো (যদি থাকে)
+if bot_token and chat_id:
+    tg_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    tg_res = requests.post(tg_url, json={"chat_id": chat_id, "text": puzzle_text})
+    print(f"Telegram status: {tg_res.status_code}")
+
+print("৫ ঘণ্টার কুইজ সফলভাবে পাঠানো হয়েছে!")
