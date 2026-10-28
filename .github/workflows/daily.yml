@@ -2,9 +2,9 @@ name: Daily Math Puzzle Automation
 
 on:
   schedule:
-    # প্রতিদিন বাংলাদেশ সময় সকাল ৯টায় (UTC 3:00 AM)
-    - cron: '0 3 * * *'
-  workflow_dispatch: # ম্যানুয়ালি টেস্ট চালানোর বাটন
+    # প্রতি ৫ ঘণ্টা পর পর স্বয়ংক্রিয়ভাবে চলবে
+    - cron: '0 */5 * * *'
+  workflow_dispatch: # টেস্ট বাটন
 
 jobs:
   send-puzzle:
@@ -27,4 +27,6 @@ jobs:
           WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
           WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
           WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
